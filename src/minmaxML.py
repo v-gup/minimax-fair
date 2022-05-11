@@ -11,7 +11,6 @@ from src.plotting import do_plotting
 from src.save_models import save_models_to_os
 import warnings
 
-
 def do_learning(X, y, numsteps, grouplabels, a=1, b=0.5,  equal_error=False, scale_eta_by_label_range=True,
                 gamma=0.0, relaxed=False, rescale_features=True,
                 model_type='LinearRegression', error_type='Total',
@@ -87,8 +86,8 @@ def do_learning(X, y, numsteps, grouplabels, a=1, b=0.5,  equal_error=False, sca
                         f'due to negative weights. When using {model_type}, sample weights'
                         f'may be shifted upwards to avoid negative weights, changing the nature of the solution.')
 
-    if equal_error and relaxed:
-        raise Exception('Equal error is not supported for the relaxed algorithm.')
+    #if equal_error and relaxed:
+    #    raise Exception('Equal error is not supported for the relaxed algorithm.')
 
     # Rescales features to be within [-100, 100] for numerical stability
     if rescale_features:
@@ -387,8 +386,20 @@ def do_learning(X, y, numsteps, grouplabels, a=1, b=0.5,  equal_error=False, sca
 
             # Weight update type depends on relaxed or not
             if relaxed:  # Projected Gradient descent
-                lambdas[i][t] = np.maximum(0, lambdas[i][t - 1] + (eta * (grouperrs[i][t] - gamma)))
-                groupweights[i][t] = p[i] + lambdas[i][t]
+                #TODO: EMILY EDIT HERE
+                if equal_error:
+                    #breakpoint()
+                    poperrs = errors[t]  # if model_type in regression_models else specific_errors['Total'][t]
+                    mean_poperrs = sum(poperrs) / numsamples
+                    group_error_diffs = grouperrs[i][t]- mean_poperrs
+                    relaxed_diffs = (np.abs(group_error_diffs) - gamma).clip(min=0) * np.sign(group_error_diffs)
+                    #lambdas[i][t] = lambdas[i][t - 1] + (eta * (grouperrs[i][t] - mean_poperrs))
+                    lambdas[i][t] = lambdas[i][t - 1] + (eta * relaxed_diffs)
+                    groupweights[i][t] = p[i] * (1 - np.sum(lambdas[i][t])) + lambdas[i][t]
+                    #print(groupweights)
+                else: 
+                    lambdas[i][t] = np.maximum(0, lambdas[i][t - 1] + (eta * (grouperrs[i][t] - gamma)))
+                    groupweights[i][t] = p[i] + lambdas[i][t]
             else:  # Non-relaxed
                 if equal_error:  # GD where errors are pushed to mean error
                     poperrs = errors[t]  # if model_type in regression_models else specific_errors['Total'][t]
@@ -486,6 +497,7 @@ def do_learning(X, y, numsteps, grouplabels, a=1, b=0.5,  equal_error=False, sca
             val_stacked_bonus_plots = None
 
     # Save models as pythonic objects to either filesystem/S3 bucket
+    # if save_models:
     if save_models:
         save_models_to_os(modelhats, dirname)
 
@@ -504,7 +516,7 @@ def do_learning(X, y, numsteps, grouplabels, a=1, b=0.5,  equal_error=False, sca
                 stacked_bonus_plots, pop_error_type, total_steps, modelhats,
                 val_max_grp_err, val_pop_err, val_agg_grouperrs, val_agg_poperrs, val_stacked_bonus_plots)
     else:
-        if relaxed:
+        if relaxed and not equal_error:
             margin_of_error = 0.001  # Allows for a small margin of error for 'unfeasible' gammas
             if gamma + margin_of_error < np.max((agg_grouperrs[:][-1])):
                 warnings.warn(f'WARNING: Desired gamma value may not be feasible with margin of error: '
@@ -753,6 +765,7 @@ def compute_highest_gamma(agg_poperrs, agg_grouperrs, relaxed):
     """
     if not relaxed:
         try:
+            # breakpoint()
             best_indices = np.where(agg_poperrs == np.min(agg_poperrs[1:]))
             best_index = min(best_indices, key=lambda x: max(agg_grouperrs[x]))[0]  # unpack the array
             highest_gamma = max(agg_grouperrs[best_index])  # error of the max error groups when pop error is minmized

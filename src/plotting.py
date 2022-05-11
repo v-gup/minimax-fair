@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src.save_plots import save_plots_to_os
 
+import os   ## MODIFICATION TO WRITE OUT DATA
+import pickle
+import pdb
 
 def do_plotting(display_plots, save_plots, use_input_commands, numsteps, group_names, group_type,
                 show_legend, error_type, data_name, model_string,
@@ -145,6 +148,38 @@ def do_plotting(display_plots, save_plots, use_input_commands, numsteps, group_n
 
         if display_plots:
             plt.show()
+
+    # MODIFICATION TO WRITE OUT DATA
+    # objects from this file to write out
+    # group_names - groups
+    # agg_poperrs - average poperr per round
+    # agg_grouperrs[:, g] - average group error per round
+    # groupweights[:, g]
+    
+    base_dir = os.path.dirname(__file__)[:-4]  # we use -4 to take off the src/ from the end to go back a directory
+    results_dir = os.path.join(base_dir, f'{dirname}' + ('/Export/'))
+
+    # Create the directory, if needed
+    if not os.path.isdir(results_dir):
+        print(f'making directory: {results_dir}')
+        os.makedirs(results_dir)
+    
+    fd = open(results_dir + '/group_names.pickle', mode='wb')
+    pickle.dump(group_names, fd)
+    fd.close()
+
+    fd = open(results_dir + '/agg_poperrs.pickle', mode='wb')
+    pickle.dump(agg_poperrs, fd)
+    fd.close()
+
+    fd = open(results_dir + '/agg_grouperrs.pickle', mode='wb')
+    pickle.dump(agg_grouperrs, fd)
+    fd.close()
+
+    fd = open(results_dir + '/group_weights.pickle', mode='wb')
+    pickle.dump(groupweights, fd)
+    fd.close()
+    # MODIFICATION TO WRITE OUT DATA
 
     if use_input_commands and display_plots:
         input("Quit")

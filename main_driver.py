@@ -18,13 +18,13 @@ models = {1: 'LinearRegression', 2: 'LogisticRegression', 3: 'Perceptron', 4: 'P
           5: 'MLPClassifier'}  # WARNING: MLPClassifier is not GPU optimized and may run slowly
 model_index = 2  # Set this to select a model type according to the mapping above
 
-numsteps = 2000  # number of steps for learning/game
+numsteps = 10 # number of steps for learning/game
 # NOTE: eta = a * t^(-b) on the t-th round of the game
 a = 1  # Multiplicative coefficient on parametrized learning rate
 b = 1 / 2  # Negative exponent on parameterized learning rate
 scale_eta_by_label_range = True  # Multiplies `a` by square of max abs. label value, to 'normalize' regression labels
 equal_error = False  # Defaults to False for minimax. Set to True to find equal error solution
-error_type = 'Log-Loss'  # 'MSE', '0/1 Loss', 'FP', 'FN', 'Log-Loss', 'FP-Log-Loss', 'FN-Log-Loss'
+error_type = 'FP'  # 'MSE', '0/1 Loss', 'FP', 'FN', 'Log-Loss', 'FP-Log-Loss', 'FN-Log-Loss'
 extra_error_types = {}  # Set of additional error types to plot from (only relevant for classification)
 pop_error_type = ''  # Error type for the population on the trajectory (set automatically in general)
 test_size = 0.0  # The proportion of the training data to be withheld as validation data (set to 0.0 for no validation)
@@ -34,11 +34,11 @@ fit_intercept = True  # If the linear model should fit an intercept (applies onl
 convergence_threshold = 1e-12  # Converge early if max change in sampleweights between rounds is less than threshold
 
 # Relaxed Model Settings
-use_multiple_gammas = False  # Set to True to run relaxed algo over many values of gamma
-num_gammas = 5  # If use_multiple_games, number of intermediate gammas to use between min and max feasible gamma
+use_multiple_gammas = True  # Set to True to run relaxed algo over many values of gamma
+num_gammas = 10 # If use_multiple_games, number of intermediate gammas to use between min and max feasible gamma
 # Use these arguments to run a single relaxed simulation with on gamma settting
-relaxed = False  # Determines if single run
-gamma = 0.0  # Max groups error if using relaxed variant
+relaxed = False # Determines if single run
+gamma = 1  # Max groups error if using relaxed variant # fpr_g - fpr_pop \leq gamma
 
 
 # Solver Specific Settings
@@ -78,14 +78,14 @@ datasets = {1: 'COMPAS', 2: 'COMPAS_full', 3: 'Default', 4: 'Communities', 5: 'A
             7: 'Bike', 8: 'Credit', 9: 'Fires', 10: 'Wine', 11: 'Heart', 12: 'Marketing(Small)', 13: 'Marketing(Full)',
             14: 'COMPAS_race_and_gender',
             0: 'Synthetic'}
-data_index = 0  # Set this to select a dataset by index according to the mapping above (0 for synthetic)
+data_index = 5  # Set this to select a dataset by index according to the mapping above (0 for synthetic)
 drop_group_as_feature = True  # Set to False (default) if groups should also be a one hot encoded categorical feature
 
 # Data read/write settings
 read_from_file = False  # If we should read pre-computed numpy matrices from a file - OVERRIDES the above if set to True
-save_data = False  # Whether or not data from setting up matrices should be is saved to the specified directory
+save_data = True  # Whether or not data from setting up matrices should be is saved to the specified directory
 file_dir = 'vectorized_datasets'  # Directory for files containing vectorized datasets to read from/write to
-file_name = '<INSERT NAME HERE>.npz'  # File name within file_dir from which to read or write data, should be .npz file
+file_name = 'results1.npz'  # File name within file_dir from which to read or write data, should be .npz file
 file_path = os.path.join(file_dir, file_name)
 
 # Synthetic Data Settings  (NOTE: only used if data_index = 0 and use_preconfigured_dataset = True)
@@ -107,7 +107,7 @@ intercept_scale = 2  # Coefficient on randomly generated` intercept for each gro
 
 # Plot/output settings
 verbose = True  # enables verbose output for doLearning
-display_plots = True
+display_plots = False
 display_intermediate_plots = False  # Whether or not to display intermediate plots in during relaxation
 use_basic_plots = False  # Whether or not we want to save/display the simple gamma vs error plots
 show_legend = True  # Denotes if the plots show the legend 
@@ -325,7 +325,7 @@ if __name__ == '__main__':
                             gamma=0.0, relaxed=False, random_split_seed=random_split_seed,
                             group_names=group_names, group_types=group_types, data_name=data_name,
                             verbose=verb, use_input_commands=False,
-                            error_type=error_type, display_plots=disp_plots, test_size=test_size)
+                            error_type=error_type, display_plots=disp_plots, test_size=test_size, dirname=dirname)
             if not equal_error:
                 # We can always drive FP/FN rates to 0 by always predicting negative/positive
                 minimax_err = 0

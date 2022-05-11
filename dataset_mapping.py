@@ -46,7 +46,7 @@ def get_dataset_features(dataset):
     elif dataset == 'Adult':
         path = 'datasets/adult_cleaned.csv'
         label = 'income'  # binary <50k or not
-        group = 'race'
+        group = 'race', 'sex'
         usable_features = None  # all
         categorical_columns = ['workclass', 'education', 'marital-status', 'occupation', 'relationship',
                                'race', 'sex', 'native-country']
